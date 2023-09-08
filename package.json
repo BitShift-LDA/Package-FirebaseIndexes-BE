@@ -1,0 +1,16 @@
+{
+  "name": "package-firebaseindexes",
+  "version": "1.0.0",
+  "description": "Util functions that help with creating \"index\" firebase docs. These docs reduce firebase reads by bulking a lot of similiar data together",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BitShift-LDA/Package-FirebaseIndexes.git"
+  },
+  "author": "Pwnedev (Hugo Andrade)",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/BitShift-LDA/Package-FirebaseIndexes/issues"
+  },
+  "homepage": "https://github.com/BitShift-LDA/Package-FirebaseIndexes#readme"
+}
