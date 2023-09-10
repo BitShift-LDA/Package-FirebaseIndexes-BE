@@ -5,12 +5,12 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BitShift-LDA/Package-FirebaseIndexes.git"
+    "url": "git+https://github.com/BitShift-LDA/Package-FirebaseIndexes-BE.git"
   },
   "author": "Pwnedev (Hugo Andrade)",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/BitShift-LDA/Package-FirebaseIndexes/issues"
+    "url": "https://github.com/BitShift-LDA/Package-FirebaseIndexes-BE/issues"
   },
-  "homepage": "https://github.com/BitShift-LDA/Package-FirebaseIndexes#readme"
+  "homepage": "https://github.com/BitShift-LDA/Package-FirebaseIndexes-BE#readme"
 }
