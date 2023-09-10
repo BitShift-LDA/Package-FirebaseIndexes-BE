@@ -1,7 +1,7 @@
 {
-  "name": "package-firebaseindexes",
+  "name": "package-firebaseindexes-be",
   "version": "1.0.0",
-  "description": "Util functions that help with creating \"index\" firebase docs. These docs reduce firebase reads by bulking a lot of similiar data together",
+  "description": "Backend (Firebase Functions) util functions that help with creating \"index\" firebase docs. These docs reduce firebase reads by bulking a lot of similiar data together",
   "main": "index.js",
   "repository": {
     "type": "git",
