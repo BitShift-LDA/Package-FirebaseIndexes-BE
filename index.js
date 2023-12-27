@@ -327,17 +327,33 @@ const indexSetEntry = (indexCollectionRef, indexDocName, entryKey, entryValue, w
 }
 
 /**
+ * Updates entryValue with entryKey in indexDocName
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexDocName Doc name where entry is located
+ * @param {string} entryKey Key of the entry to update
+ * @param {Object} entryValue Value of the entry to update
+ * @param {FirebaseFirestore.transaction} t Optional Firestore transaction instance, if given, then the function will run in a transaction
+ * @returns {Promise} Promise that resolves when update is ran
+ */
+const indexSetEntryInTransaction = (indexCollectionRef, indexDocName, entryKey, entryValue, t) => {
+  return t.update(indexCollectionRef.doc(indexDocName), {[entryKey]: entryValue}, {merge: true});
+}
+
+/**
  * Returns all docs data of given indexName in an array
  * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
  * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @param {FirebaseFirestore.transaction} [t] Optional Firestore transaction instance, if given, then the function will run in a transaction
  * @returns {Array} Array of docs data, each index in array = doc number
  */
-const indexGetAllIndexDocs = (indexCollectionRef, indexDocName) => {
+const indexGetAllIndexDocs = (indexCollectionRef, indexDocName, t) => {
   return new Promise(async(resolve, reject) => {  
     const docs = [];
     const docsPromises = [];
 
-    await indexCollectionRef.doc(indexDocName+":0").get().then(async(baseIndexDoc) => {
+    const firstDocRef = indexCollectionRef.doc(indexDocName+":0");
+
+    await (t ? t.get(firstDocRef) : firstDocRef.get()).then(async(baseIndexDoc) => {
       if (!baseIndexDoc.exists) {resolve(docs); return;} // No docs in index
       const baseDocData = baseIndexDoc.data();
       if (!baseDocData || !baseDocData.latestDocName) {resolve(docs); return;} // No docs in index
@@ -352,7 +368,8 @@ const indexGetAllIndexDocs = (indexCollectionRef, indexDocName) => {
         const latestDocNumber = parseInt(latestDocNameSplit[1]);
 
         for (let i = latestDocNumber; i > 0; i--) {
-          const getDoc = indexCollectionRef.doc(indexDocName+":"+i).get().then((indexDoc) => {
+          const nextDocRef = indexCollectionRef.doc(indexDocName+":"+i);
+          const getDoc = (t ? t.get(nextDocRef) : nextDocRef.get()).then((indexDoc) => {
             const docData = indexDoc.data();
             docs[i] = docData;
           });
@@ -383,12 +400,15 @@ const indexMergeDocsArray = (docs) => {
 };
 
 module.exports = {
-  indexAddEntries,
-  indexFindEntry,
-  indexFindAndDeleteEntry,
-  indexFindAndSetEntry,
-  indexFindAndUpdateEntry,
-  indexSetEntry,
-  indexGetAllIndexDocs,
-  indexMergeDocsArray,
+  indexAddEntries, // Compatible with batches // TODO: Transaction compatibility
+  indexFindEntry, // Compatible with batches // TODO: Transaction compatibility
+  indexFindAndDeleteEntry, // Compatible with batches // TODO: Transaction compatibility
+  indexFindAndSetEntry, // Compatible with batches // TODO: Transaction compatibility
+  indexFindAndUpdateEntry, // Compatible with batches // TODO: Transaction compatibility
+  indexSetEntry, // Compatible with batches
+
+  indexSetEntryInTransaction, // Compatible with transactions
+
+  indexGetAllIndexDocs, // Compatible with transactions and batches
+  indexMergeDocsArray, // Compatible with transactions and batches
 }
