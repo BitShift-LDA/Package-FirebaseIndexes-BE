@@ -400,15 +400,15 @@ const indexMergeDocsArray = (docs) => {
 };
 
 module.exports = {
-  indexAddEntries, // Compatible with batches // TODO: Transaction compatibility
-  indexFindEntry, // Compatible with batches // TODO: Transaction compatibility
-  indexFindAndDeleteEntry, // Compatible with batches // TODO: Transaction compatibility
-  indexFindAndSetEntry, // Compatible with batches // TODO: Transaction compatibility
-  indexFindAndUpdateEntry, // Compatible with batches // TODO: Transaction compatibility
-  indexSetEntry, // Compatible with batches
+  indexAddEntries,// TODO: Transaction compatibility
+  indexFindEntry,// TODO: Transaction compatibility
+  indexFindAndDeleteEntry,// TODO: Transaction compatibility
+  indexFindAndSetEntry,// TODO: Transaction compatibility
+  indexFindAndUpdateEntry,// TODO: Transaction compatibility
+  indexSetEntry,
 
-  indexSetEntryInTransaction, // Compatible with transactions
+  indexSetEntryInTransaction,
 
-  indexGetAllIndexDocs, // Compatible with transactions and batches
-  indexMergeDocsArray, // Compatible with transactions and batches
+  indexGetAllIndexDocs,
+  indexMergeDocsArray,
 }
