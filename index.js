@@ -343,17 +343,17 @@ const indexSetEntryInTransaction = (indexCollectionRef, indexDocName, entryKey, 
  * Returns all docs data of given indexName in an array
  * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
  * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
- * @param {FirebaseFirestore.transaction} [t] Optional Firestore transaction instance, if given, then the function will run in a transaction
+ * @param {FirebaseFirestore.transaction} t Firestore transaction instance, if given, then the function will run in a transaction
  * @returns {Array} Array of docs data, each index in array = doc number
  */
-const indexGetAllIndexDocs = (indexCollectionRef, indexDocName, t) => {
+const indexGetAllIndexDocsInTransaction = (indexCollectionRef, indexDocName, t) => {
   return new Promise(async(resolve, reject) => {  
     const docs = [];
     const docsPromises = [];
 
     const firstDocRef = indexCollectionRef.doc(indexDocName+":0");
 
-    await (t ? t.get(firstDocRef) : firstDocRef.get()).then(async(baseIndexDoc) => {
+    await t.get(firstDocRef).then(async(baseIndexDoc) => {
       if (!baseIndexDoc.exists) {resolve(docs); return;} // No docs in index
       const baseDocData = baseIndexDoc.data();
       if (!baseDocData || !baseDocData.latestDocName) {resolve(docs); return;} // No docs in index
@@ -369,7 +369,48 @@ const indexGetAllIndexDocs = (indexCollectionRef, indexDocName, t) => {
 
         for (let i = latestDocNumber; i > 0; i--) {
           const nextDocRef = indexCollectionRef.doc(indexDocName+":"+i);
-          const getDoc = (t ? t.get(nextDocRef) : nextDocRef.get()).then((indexDoc) => {
+          const getDoc = t.get(nextDocRef).then((indexDoc) => {
+            const docData = indexDoc.data();
+            docs[i] = docData;
+          });
+          docsPromises.push(getDoc);
+        }
+      }  
+    });
+
+    await Promise.all(docsPromises);
+
+    resolve(docs);
+  });
+};
+
+/**
+ * Returns all docs data of given indexName in an array
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @returns {Array} Array of docs data, each index in array = doc number
+ */
+const indexGetAllIndexDocs = (indexCollectionRef, indexDocName) => {
+  return new Promise(async(resolve, reject) => {  
+    const docs = [];
+    const docsPromises = [];
+
+    await indexCollectionRef.doc(indexDocName+":0").get().then(async(baseIndexDoc) => {
+      if (!baseIndexDoc.exists) {resolve(docs); return;} // No docs in index
+      const baseDocData = baseIndexDoc.data();
+      if (!baseDocData || !baseDocData.latestDocName) {resolve(docs); return;} // No docs in index
+
+      docs[0] = baseDocData;
+
+      const latestDocName = baseDocData.latestDocName;
+
+      // If more than 1 doc
+      if (latestDocName !== indexDocName+":0") {
+        const latestDocNameSplit = latestDocName.split(":");
+        const latestDocNumber = parseInt(latestDocNameSplit[1]);
+
+        for (let i = latestDocNumber; i > 0; i--) {
+          const getDoc = indexCollectionRef.doc(indexDocName+":"+i).get().then((indexDoc) => {
             const docData = indexDoc.data();
             docs[i] = docData;
           });
@@ -400,15 +441,16 @@ const indexMergeDocsArray = (docs) => {
 };
 
 module.exports = {
-  indexAddEntries,// TODO: Transaction compatibility
-  indexFindEntry,// TODO: Transaction compatibility
-  indexFindAndDeleteEntry,// TODO: Transaction compatibility
-  indexFindAndSetEntry,// TODO: Transaction compatibility
-  indexFindAndUpdateEntry,// TODO: Transaction compatibility
+  indexAddEntries, // TODO: Transaction compatibility
+  indexFindEntry, // TODO: Transaction compatibility
+  indexFindAndDeleteEntry, // TODO: Transaction compatibility
+  indexFindAndSetEntry, // TODO: Transaction compatibility
+  indexFindAndUpdateEntry, // TODO: Transaction compatibility
   indexSetEntry,
+  indexGetAllIndexDocs,
 
   indexSetEntryInTransaction,
+  indexGetAllIndexDocsInTransaction,
 
-  indexGetAllIndexDocs,
   indexMergeDocsArray,
 }
