@@ -379,7 +379,7 @@ const indexGetAllIndexDocs = (indexCollectionRef, indexDocName) => {
  * @param {FirebaseFirestore.transaction} t Firestore transaction instance
  * @returns {Promise} Promise that resolves when entries are added to batch
  */
-const indexAddEntriesInTransanction = (indexCollectionRef, indexName, entries, maxEntriesPerDoc, t) => {
+const indexAddEntriesInTransaction = (indexCollectionRef, indexName, entries, maxEntriesPerDoc, t) => {
   return new Promise(async(resolve, reject) => {
     // Entries to add to index
     const entryKeys = Object.keys(entries);
@@ -430,6 +430,110 @@ const indexAddEntriesInTransanction = (indexCollectionRef, indexName, entries, m
 
     resolve();
   });
+};
+
+/**
+ * Returns the index entry for given entryKey and the doc name of the doc that contains the entry
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @param {string} entryKey Key of the entry to search for in the index docs
+ * @param {FirebaseFirestore.transaction} t Firestore transaction instance
+ * @returns {Promise} Promise that resolves with an object {indexDocName, entry} If entry is not found, then indexDocName and entry are null
+ */
+const indexFindEntryInTransaction = async(indexCollectionRef, indexName, entryKey, t) => {
+  return new Promise(async(resolve, reject) => {
+    const firstDocName = indexName+":0";
+    const firstDoc = await t.get(indexCollectionRef.doc(firstDocName));
+    if (!firstDoc.exists || !firstDoc.data() || !firstDoc.data().latestDocName) {resolve({indexDocName: null, entry: null}); return;} // No docs in index
+
+    const firstDocData = firstDoc.data();
+
+    // Check if entry is in firstDoc
+    if (firstDocData[entryKey]) {
+      resolve({indexDocName: firstDocName, entry: firstDocData[entryKey]});
+      return;
+    }
+
+    const latestDocName = firstDocData.latestDocName;
+    const latestDocIndex = parseInt(latestDocName.split(":")[1]);
+
+    if (!latestDocIndex || latestDocIndex < 1) {resolve({indexDocName: null, entry: null}); return;} // Entry doesn't exist
+
+    // Check all the other docs
+    let currentDoc = 1;
+    let indexDocName = null;
+    let entry = null;
+
+    while (currentDoc <= latestDocIndex && entry === null && indexDocName === null) {
+      const docName = indexName+":"+currentDoc;
+      const doc = await t.get(indexCollectionRef.doc(docName));
+      if (doc.exists && doc.data() && doc.data()[entryKey]) {
+        indexDocName = docName;
+        entry = doc.data()[entryKey];
+      }
+      currentDoc++;
+    }
+
+    resolve({indexDocName: indexDocName, entry: entry});
+  });
+};
+
+/**
+ * Finds and deletes given entry from given index in a transaction
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @param {string} entryKey Key of the entry to search for in the index docs
+ * @param {FirebaseFirestore.transaction} t Firestore transaction instance
+ * @returns {Promise<boolean>} Promise that resolves with a boolean indicating whether the delete was successfully added to transaction
+ */
+const indexFindAndDeleteEntryInTransaction = async(indexCollectionRef, indexName, entryKey, t) => {
+  let willDelete = false;
+  return new Promise(async(resolve, reject) => {
+    const {indexDocName, entry} = await indexFindEntryInTransaction(indexCollectionRef, indexName, entryKey, t);
+    if (indexDocName && entry) {
+      willDelete = true;
+      t.update(indexCollectionRef.doc(indexDocName), {[entryKey]: FieldValue.delete()});
+    }
+    resolve(willDelete);
+  });
+};
+
+/**
+ * Finds and sets given entry to new `entryValue` value in a transaction. If no entry is found, then adds it if `maxEntriesPerDoc` is defined
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @param {string} entryKey Key of the entry to search for in the index docs
+ * @param {Object} entryValue Value of the entry to update
+ * @param {FirebaseFirestore.transaction} t Firestore transaction instance
+ * @param {number} [maxEntriesPerDoc] Maximum number of entries per doc
+ * @returns {Promise} Promise that resolves when update is added to transaction
+ */
+const indexFindAndSetEntryInTransaction = async (indexCollectionRef, indexName, entryKey, entryValue, t, maxEntriesPerDoc) => {
+  const {indexDocName, entry} = await indexFindEntryInTransaction(indexCollectionRef, indexName, entryKey, t);
+  if (indexDocName && entry) { // Entry found, lets set it
+    t.update(indexCollectionRef.doc(indexDocName), {[entryKey]: entryValue});
+  } else if (maxEntriesPerDoc) { // Entry not found, lets add it if maxEntriesPerDoc is defined
+    await indexAddEntriesInTransaction(indexCollectionRef, indexName, {[entryKey]: entryValue}, maxEntriesPerDoc, t);
+  }
+};
+
+/**
+ * Finds and merges given entry's value with new `entryValue` value in a transaction. If no entry is found, then adds it if `maxEntriesPerDoc` is defined
+ * @param {CollectionReference} indexCollectionRef Firestore collection ref of target index
+ * @param {string} indexName For example, if target index first doc is "!!!users:0" then indexName is "!!!users"
+ * @param {string} entryKey Key of the entry to search for in the index docs
+ * @param {Object} entryValue Value of the entry to update
+ * @param {FirebaseFirestore.transaction} t Firestore transaction instance
+ * @param {number} [maxEntriesPerDoc] Maximum number of entries per doc
+ * @returns {Promise} Promise that resolves when update is added to transaction
+ */
+const indexFindAndUpdateEntryInTransaction = async (indexCollectionRef, indexName, entryKey, entryValue, t, maxEntriesPerDoc) => {
+  const {indexDocName, entry} = await indexFindEntryInTransaction(indexCollectionRef, indexName, entryKey, t);
+  if (indexDocName && entry) { // Entry found, lets update it
+    t.update(indexCollectionRef.doc(indexDocName), {[entryKey]: {...entry, ...entryValue}});
+  } else if (maxEntriesPerDoc) { // Entry not found, lets add it if maxEntriesPerDoc is defined
+    await indexAddEntriesInTransaction(indexCollectionRef, indexName, {[entryKey]: entryValue}, maxEntriesPerDoc, t);
+  }
 };
 
 /**
@@ -506,18 +610,24 @@ const indexMergeDocsArray = (docs) => {
 };
 
 module.exports = {
+  // With writeBatch
   indexAddEntries,
-  indexFindEntry, // TODO: Transaction compatibility
-  indexFindAndDeleteEntry, // TODO: Transaction compatibility
-  indexFindAndSetEntry, // TODO: Transaction compatibility
-  indexFindAndUpdateEntry, // TODO: Transaction compatibility
+  indexFindEntry,
+  indexFindAndDeleteEntry,
+  indexFindAndSetEntry,
+  indexFindAndUpdateEntry,
   indexSetEntry,
   indexGetAllIndexDocs,
 
-  indexAddEntriesInTransanction,
-
+  // With transaction
+  indexAddEntriesInTransaction,
+  indexFindEntryInTransaction,
+  indexFindAndDeleteEntryInTransaction,
+  indexFindAndSetEntryInTransaction,
+  indexFindAndUpdateEntryInTransaction,
   indexSetEntryInTransaction,
   indexGetAllIndexDocsInTransaction,
 
+  // Auxiliar
   indexMergeDocsArray,
 }
