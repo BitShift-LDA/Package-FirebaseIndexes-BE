@@ -456,7 +456,7 @@ const indexAddEntriesInTransaction_start_readsOnly = (indexCollectionRef, indexN
     // Get docNumEntriesToAddMap
     const docNumEntriesToAddMap = aux_getDocNumEntriesToAddMap(firstDoc, lastDoc, numOfEntries, maxEntriesPerDoc);
 
-    resolve({docNumEntriesToAddMap});
+    resolve(docNumEntriesToAddMap);
   });
 };
 
