@@ -170,7 +170,7 @@ const indexAddEntries = (indexCollectionRef, indexName, entries, maxEntriesPerDo
     // Get docNumEntriesToAddMap
     const docNumEntriesToAddMap = aux_getDocNumEntriesToAddMap(firstDoc, lastDoc, numOfEntries, maxEntriesPerDoc);
 
-    const isLatestDocNameUpdated = false;
+    let isLatestDocNameUpdated = false;
 
     // Add entries to docs
     const docIndexKeys = Object.keys(docNumEntriesToAddMap);
@@ -394,7 +394,7 @@ const indexAddEntriesInTransaction = (indexCollectionRef, indexName, entries, ma
     // Get docNumEntriesToAddMap
     const docNumEntriesToAddMap = aux_getDocNumEntriesToAddMap(firstDoc, lastDoc, numOfEntries, maxEntriesPerDoc);
 
-    const isLatestDocNameUpdated = false;
+    let isLatestDocNameUpdated = false;
 
     // Add entries to docs
     const docIndexKeys = Object.keys(docNumEntriesToAddMap);
