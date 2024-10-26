@@ -399,10 +399,10 @@ const indexAddEntriesInTransaction = (indexCollectionRef, indexName, entries, ma
     // Add entries to docs
     const docIndexKeys = Object.keys(docNumEntriesToAddMap);
     for (let i = 0; i < docIndexKeys.length; i++) {
-      const key = docIndexKeys[i];
-      const targetDocName = indexName+":"+key;
+      const docKey = docIndexKeys[i];
+      const targetDocName = indexName+":"+docKey;
       const targetDocRef = indexCollectionRef.doc(targetDocName);
-      const numEntriesToAdd = docNumEntriesToAddMap[key];
+      const numEntriesToAdd = docNumEntriesToAddMap[docKey];
 
       // Build targetDocEntries
       const targetDocEntriesKeys = entryKeys.splice(0, numEntriesToAdd);
@@ -412,7 +412,7 @@ const indexAddEntriesInTransaction = (indexCollectionRef, indexName, entries, ma
         targetDocEntries[key] = entries[key];
       }
 
-      if (!isLatestDocNameUpdated && key === 0) { // If latestDocName not updated and we are adding to doc 0
+      if (!isLatestDocNameUpdated && Number(docKey) === 0) { // If latestDocName not updated and we are adding to doc 0
         targetDocEntries.latestDocName = indexName+":"+(docIndexKeys[docIndexKeys.length-1]);
         isLatestDocNameUpdated = true;
       }
