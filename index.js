@@ -622,10 +622,9 @@ const indexFindAndUpdateEntryInTransaction = async (indexCollectionRef, indexNam
  * @param {string} entryKey Key of the entry to update
  * @param {Object} entryValue Value of the entry to update
  * @param {FirebaseFirestore.transaction} t Optional Firestore transaction instance
- * @returns {Promise} Promise that resolves when update is ran
  */
 const indexSetEntryInTransaction = (indexCollectionRef, indexDocName, entryKey, entryValue, t) => {
-  return t.set(indexCollectionRef.doc(indexDocName), {[entryKey]: entryValue}, {merge: true});
+  t.set(indexCollectionRef.doc(indexDocName), {[entryKey]: entryValue}, {merge: true});
 }
 
 /**
