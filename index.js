@@ -117,6 +117,10 @@ const aux_getDocNumEntriesToAddMap = (firstDoc, lastDoc, numOfEntries, maxEntrie
         docNumEntriesToAddMap[latestDocNumber] = maxEntriesPerDoc-lastDocLength;
         counter_entriesLeftToPlace -= maxEntriesPerDoc-lastDocLength; // = numOfEntries-(maxEntriesPerDoc-lastDocLength)
         let counterCurrentDoc = parseInt(latestDocNumber)+1;
+        if (isNaN(counterCurrentDoc)) {
+          throw new Error(`Erro (6e9c): ${latestDocNumber}. Por favor contacte o suporte.`);
+        }
+
         while (counter_entriesLeftToPlace > 0) {
           if (counter_entriesLeftToPlace <= maxEntriesPerDoc) {
             docNumEntriesToAddMap[counterCurrentDoc] = counter_entriesLeftToPlace;
@@ -130,6 +134,10 @@ const aux_getDocNumEntriesToAddMap = (firstDoc, lastDoc, numOfEntries, maxEntrie
       }
     } else { // Last doc already full
       let counterCurrentDoc = parseInt(latestDocNumber)+1;
+      if (isNaN(counterCurrentDoc)) {
+        throw new Error(`Erro (c3bd): ${latestDocNumber}. Por favor contacte o suporte.`);
+      }
+
       while (counter_entriesLeftToPlace > 0) {
         if (counter_entriesLeftToPlace <= maxEntriesPerDoc) {
           docNumEntriesToAddMap[counterCurrentDoc] = counter_entriesLeftToPlace;
@@ -231,6 +239,9 @@ const indexFindEntry = async(indexCollectionRef, indexName, entryKey) => {
 
     const latestDocName = firstDocData.latestDocName;
     const latestDocIndex = parseInt(latestDocName.split(":")[1]);
+    if (isNaN(latestDocIndex)) {
+      throw new Error(`Erro (33f9): ${latestDocName}. Por favor contacte o suporte.`);
+    }
 
     if (!latestDocIndex || latestDocIndex < 1) {resolve({indexDocName: null, entry: null}); return;} // Entry doesn't exist
 
@@ -353,6 +364,9 @@ const indexGetAllIndexDocs = (indexCollectionRef, indexDocName) => {
       if (latestDocName !== indexDocName+":0") {
         const latestDocNameSplit = latestDocName.split(":");
         const latestDocNumber = parseInt(latestDocNameSplit[1]);
+        if (isNaN(latestDocNumber)) {
+          throw new Error(`Erro (caf6): ${latestDocName}. Por favor contacte o suporte.`);
+        }
 
         for (let i = latestDocNumber; i > 0; i--) {
           const getDoc = indexCollectionRef.doc(indexDocName+":"+i).get().then((indexDoc) => {
@@ -535,6 +549,9 @@ const indexFindEntryInTransaction = async(indexCollectionRef, indexName, entryKe
 
     const latestDocName = firstDocData.latestDocName;
     const latestDocIndex = parseInt(latestDocName.split(":")[1]);
+    if (isNaN(latestDocIndex)) {
+      throw new Error(`Erro (847f): ${latestDocName}. Por favor contacte o suporte.`);
+    }
 
     if (!latestDocIndex || latestDocIndex < 1) {resolve({indexDocName: null, entry: null}); return;} // Entry doesn't exist
 
@@ -654,6 +671,9 @@ const indexGetAllIndexDocsInTransaction = (indexCollectionRef, indexDocName, t) 
       if (latestDocName !== indexDocName+":0") {
         const latestDocNameSplit = latestDocName.split(":");
         const latestDocNumber = parseInt(latestDocNameSplit[1]);
+        if (isNaN(latestDocNumber)) {
+          throw new Error(`Erro (5c10): ${latestDocName}. Por favor contacte o suporte.`);
+        }
 
         for (let i = latestDocNumber; i > 0; i--) {
           const nextDocRef = indexCollectionRef.doc(indexDocName+":"+i);
