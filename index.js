@@ -491,6 +491,11 @@ const indexAddEntriesInTransaction_end_writesOnly = (indexCollectionRef, indexNa
 
     // Add entries to docs
     const docIndexKeys = Object.keys(docNumEntriesToAddMap);
+
+    if (docIndexKeys.length === 0) {
+      return resolve();
+    }
+
     for (let i = 0; i < docIndexKeys.length; i++) {
       const docKey = docIndexKeys[i];
       const targetDocName = indexName+":"+docKey;
@@ -521,7 +526,7 @@ const indexAddEntriesInTransaction_end_writesOnly = (indexCollectionRef, indexNa
       t.set(firstDocRef, {"latestDocName": latestDocName}, {merge: true});
     }
 
-    resolve();
+    return resolve();
   });
 }
 
