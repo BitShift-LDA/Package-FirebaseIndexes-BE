@@ -3,6 +3,7 @@
   "version": "1.0.6",
   "description": "Backend (Firebase Functions) util functions that help with creating \"index\" firebase docs. These docs reduce firebase reads by bulking a lot of similiar data together",
   "main": "index.js",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BitShift-LDA/Package-FirebaseIndexes-BE.git"
